@@ -1,0 +1,100 @@
+/// Trivial implementation of search minimum in the given range [i; j].
+template<typename T>
+size_t findRMQ(const std::vector<T>& arr, size_t i, size_t j)
+{
+    if (i > j)
+        throw std::invalid_argument("Bad i <= j");
+    if (j >= arr.size())
+        throw std::invalid_argument("i, j out of range");
+
+    size_t minInd = i;
+    //T curMin = arr[cmInd];
+
+    for(++i; i <= j; ++i)
+    {
+        if (arr[i] < arr[minInd])
+            minInd = i;
+    }
+    return minInd;
+}
+
+
+/// The implementation of the DynProg approach
+template<typename T>
+class DpRmqFinder
+{
+
+public:
+    DpRmqFinder(std::vector<T>* arr)
+    : _dataPtr(arr), _tableMin(nullptr)
+    {
+        if(!arr)
+            throw std::invalid_argument("Empty array!");
+
+        makeTable();
+    }
+
+    ~DpRmqFinder()
+    {
+        deleteTable();
+    }
+
+public:
+    size_t get(size_t i, size_t j) const
+    {
+        return _tableMin[i][j + i];
+    }
+
+    size_t argmin(size_t i, size_t j) const
+    {
+        size_t a = get(i, j - 1);
+        if(_dataPtr[0][a] > _dataPtr[0][j])
+            return j;
+        else
+            return a;
+
+    }
+
+    void process()
+    {
+        for(size_t i = 0; i < _dataPtr->size(); ++i)
+            set(i, i, i);
+
+        for(size_t i = 0; i < _dataPtr->size() - 1; ++i)
+        {
+            for(size_t j = i + 1; j < _dataPtr->size(); ++j)
+                set(i, j, argmin(i, j));
+        }
+    }
+    protected:
+    void set(size_t i, size_t j, size_t val)
+    {
+        _tableMin[i][j + i] = val;
+    }
+
+    void makeTable()
+    {
+        if(_tableMin)
+            deleteTable();
+
+        _tableMin = new size_t*[_dataPtr->size()];
+
+        for(size_t i = 0; i < _dataPtr->size(); ++i)
+            _tableMin[i] = new size_t[_dataPtr->size()];
+    }
+
+    void deleteTable()
+    {
+        if(!_tableMin)
+            return;
+
+        for(size_t i = 0; i < _dataPtr->size(); ++i)
+            delete [] _tableMin[i];
+
+        delete [] _tableMin;
+        _tableMin = nullptr;
+    }
+    
+    const std::vector<T>* _dataPtr;
+    size_t** _tableMin;
+};
